@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 /**
- * @Description: ${todo}
+ * @Description: https://blog.51cto.com/yushiwh/2439518
  * @author xuzq
  * @date 2020/1/9 16:47
  * @version V1.0
@@ -47,6 +47,17 @@ public class ThreadedBinaryTreeDemo {
         System.out.println("使用线索化的方式遍历线索化二叉树");
 //        threadedBinaryTree.threadedList(); // 中序 8,3,10,1,6,14
 //        threadedBinaryTree.preThreadedList(); // 前序 1,3,8,10,6,14
+
+
+        /**
+         * 线索化后序遍历
+         */
+        //如果是后序，需要创建二叉树的时候，将parent进行保存。这个是用于后续二叉树的遍历的
+        node2.setParent(root);
+        node3.setParent(root);
+        node4.setParent(node2);
+        node5.setParent(node2);
+        node6.setParent(node3);
         threadedBinaryTree.postThreadedList(); // 后序 8,10,3,14,6,1
     }
 }
@@ -123,30 +134,47 @@ class ThreadedBinaryTree {
     }
 
     /**
-     * 后序遍历遍历线索化二叉树的方法(不可行，有问题)
+     * 后序线索化二叉树遍历方法
+     * <p>
+     * 注意后序有点复杂，需要建立二叉树的时候，将节点的parent进行赋值，否则不能遍历成功
+     * 1
+     * /   \
+     * 3     6
+     * / \   /
+     * 8  10 14
+     * <p>
+     * {8,10,3,1,14,6}
+     * 1. 如果leftType == 0 表示指向的是左子树, 如果 1 则表示指向前驱结点
+     * 2. 如果rightType == 0 表示指向是右子树, 如果 1表示指向后继结点
      */
     public void postThreadedList() {
-        // 定义一个变量，存储当前遍历的节点，从root开始
+        //1、找后序遍历方式开始的节点
         HeroNode node = root;
-        while (node != null) {
-            // 循环的找到leftType == 1的节点，第一个找到的就是8节点
-            // 后面随着遍历而变化，因为当LeftType==1时，说明该节点是按照线索化
-            // 处理后面的有效节点
-            while (node.getLeftType() == 0) {
-                node = node.getLeft();
-            }
-
-            // 打印当前这个节点
-            System.out.println(node);
-
-            // 如果当前节点的右指针指向的是后继节点，就一直输出
-            while (node.getRightType() == 1) {
-                // 获取到当前节点的后继节点
+        while ( node != null && node.getLeftType() == 0 ) {
+            node = node.getLeft();
+        }
+        while ( node != null ) {
+            //右节点是线索
+            if (node.getRightType() == 1) {
+                System.out.print(node + ", ");
+                pre = node;
                 node = node.getRight();
-                System.out.println(node);
+            } else {
+                //如果上个处理的节点是当前节点的右节点
+                if (node.getRight() == pre) {
+                    System.out.print(node + ", ");
+                    if (node == root) {
+                        return;
+                    }
+                    pre = node;
+                    node = node.getParent();
+                } else {    //如果从左节点的进入则找到有子树的最左节点
+                    node = node.getRight();
+                    while ( node != null && node.getLeftType() == 0 ) {
+                        node = node.getLeft();
+                    }
+                }
             }
-            // 替换这个遍历的节点
-            node = node.getRight();
         }
     }
 
@@ -263,7 +291,7 @@ class ThreadedBinaryTree {
 
 
     /**
-     * 不可行，虽然线索化没什么问题，但会导致无法遍历，需要增加辅助节点，帮助遍历
+     * 后序线索化
      * @param node
      */
     public void postThreadedNodes(HeroNode node) {
@@ -461,6 +489,19 @@ class HeroNode {
     private String name;
     private HeroNode left;
     private HeroNode right;
+
+    /**
+     * //父节点的指针（为了后序线索化使用）
+     */
+    private HeroNode parent;
+
+    public HeroNode getParent() {
+        return parent;
+    }
+
+    public void setParent(HeroNode parent) {
+        this.parent = parent;
+    }
 
     // 说明
     // 1. 如果leftType = 0, 表示指向的是左子树，1，表示指向前驱节点
